@@ -3,174 +3,194 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SAFE-GUARD 10.6 | CONTROL PANEL</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>SAFE-GUARD PRO | Panel de Control</title>
     <style>
-        :root { --safe: #00ff88; --danger: #ff4444; --bg: #0b0e11; --panel: #15191e; --accent: #00d4ff; }
-        body { background: var(--bg); color: #e0e0e0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        
-        .card-main { 
-            background: var(--panel); 
-            border: 1px solid #2b2f36; 
-            border-radius: 20px; 
-            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
-            margin-top: 5vh;
+        :root {
+            --bg: #0b0e11;
+            --card: #161a1e;
+            --primary: #f0b90b; /* Color estilo Binance/Trading */
+            --danger: #f6465d;
+            --success: #0ecb81;
+            --text: #eaecef;
         }
 
-        .monitor {
-            background: rgba(0,0,0,0.4);
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 450px;
+            margin-top: 30px;
+            background: var(--card);
+            padding: 25px;
             border-radius: 15px;
-            padding: 20px;
-            border: 1px solid #333;
-            transition: 0.3s;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border: 1px solid #2b3139;
         }
 
-        .alert-active { 
-            border-color: var(--safe); 
-            box-shadow: 0 0 15px rgba(0, 255, 136, 0.3);
-            background: rgba(0, 255, 136, 0.05);
+        h1 { font-size: 22px; color: var(--primary); margin-bottom: 5px; }
+        .status { font-size: 12px; margin-bottom: 20px; color: #848e9c; }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
         }
 
-        .display-val { font-size: 4.5rem; font-weight: 800; color: #fff; }
-        
-        .input-control {
-            background: #000 !important;
-            border: 2px solid #333 !important;
-            color: white !important;
-            font-size: 1.8rem;
-            text-align: center;
-            border-radius: 10px;
+        input[type="number"] {
+            flex: 1;
+            background: #2b3139;
+            border: 1px solid #474d57;
+            border-radius: 8px;
+            color: white;
+            padding: 15px;
+            font-size: 18px;
+            outline: none;
         }
 
-        .btn-register {
-            background: #fff;
-            color: #000;
-            font-weight: bold;
-            font-size: 1.2rem;
-            border-radius: 10px;
-            padding: 12px;
+        input:focus { border-color: var(--primary); }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            border-radius: 8px;
             border: none;
-        }
-
-        .btn-register:active { transform: scale(0.98); background: var(--safe); }
-
-        .tag {
-            padding: 5px 12px;
-            border-radius: 5px;
-            font-family: monospace;
             font-weight: bold;
-            font-size: 1rem;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-bottom: 10px;
         }
 
-        .dot { height: 8px; width: 8px; background: var(--safe); border-radius: 50%; display: inline-block; margin-right: 5px; box-shadow: 0 0 5px var(--safe); }
+        .btn-add { background: var(--primary); color: #000; }
+        .btn-add:hover { background: #d9a508; }
+
+        .btn-del { background: transparent; color: var(--danger); border: 1px solid var(--danger); }
+        .btn-del:hover { background: rgba(246, 70, 93, 0.1); }
+
+        /* Estilo para el historial */
+        .history-box {
+            margin-top: 20px;
+            text-align: left;
+            border-top: 1px solid #2b3139;
+            padding-top: 15px;
+        }
+
+        .history-title { font-size: 14px; color: #848e9c; margin-bottom: 10px; }
+        
+        .badge-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .badge {
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 13px;
+            background: #2b3139;
+            border-bottom: 2px solid #474d57;
+        }
+
+        .badge.red { color: var(--danger); border-color: var(--danger); }
+        .badge.gold { color: var(--primary); border-color: var(--primary); }
+
+        #sessionID { font-weight: bold; color: var(--text); }
     </style>
 </head>
 <body>
 
-<div class="container d-flex justify-content-center">
-    <div class="card-main p-4 w-100" style="max-width: 450px;">
-        
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h5 class="fw-bold mb-0">SAFE-GUARD <span style="color:var(--accent)">10.6</span></h5>
-            <div class="small"><span class="dot"></span> ENGINE READY</div>
+    <div class="container">
+        <h1>SAFE-GUARD V10.8</h1>
+        <div class="status">Sesión Activa: <span id="sessionID">Cargando...</span></div>
+
+        <div class="input-group">
+            <input type="number" id="multiplier" step="0.01" placeholder="Ej: 1.25" autofocus>
         </div>
 
-        <div id="monitor" class="monitor text-center mb-4">
-            <small class="text-muted fw-bold">PROBABILIDAD DE SALIDA</small>
-            <div id="target-text" class="display-val my-1">---</div>
-            
-            <div class="px-2">
-                <div class="progress" style="height: 6px; background: #222;">
-                    <div id="conf-bar" class="progress-bar bg-info" style="width: 0%"></div>
-                </div>
-                <div class="d-flex justify-content-between mt-1 small">
-                    <span class="text-muted">CONFIANZA</span>
-                    <span id="conf-text" class="fw-bold text-info">0%</span>
-                </div>
-            </div>
-        </div>
+        <button class="btn btn-add" onclick="sendData()">REGISTRAR ENTRADA</button>
+        <button class="btn btn-del" onclick="deleteLast()">BORRAR ÚLTIMO ERROR</button>
 
-        <div class="mb-3">
-            <input type="number" id="val-in" class="form-control input-control mb-3" placeholder="0.00" step="0.01">
-            <button id="btn-send" class="btn btn-register w-100">REGISTRAR EN TIEMPO REAL</button>
-        </div>
-
-        <div class="mt-4">
-            <p class="small text-muted fw-bold mb-2 text-uppercase color">Historial de Ronda:</p>
-            <div id="history-box" class="d-flex flex-wrap gap-2">
+        <div class="history-box">
+            <div class="history-title">Tus últimos registros (Sesión):</div>
+            <div id="badgeHistory" class="badge-container">
                 </div>
         </div>
-
-        <button id="btn-reset" class="btn btn-link btn-sm text-danger text-decoration-none mt-4 w-100 opacity-50 small">Resetear Datos de Sesión</button>
     </div>
-</div>
 
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, limit, serverTimestamp, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js";
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp, query, orderBy, limit, getDocs, deleteDoc, doc, where, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    // --- CONFIGURACIÓN FIREBASE ---
-    const firebaseConfig = {
-        apiKey: "AIzaSyAKITV7P-n2hhDdtyhyHR8l6TLu7SMqkq4",
-        authDomain: "aviator-engine.firebaseapp.com",
-        projectId: "aviator-engine",
-        storageBucket: "aviator-engine.firebasestorage.app",
-        messagingSenderId: "46567723254",
-        appId: "1:46567723254:web:c3108b6fe059bdd93a9cd7"
-    };
+        const firebaseConfig = {
+            apiKey: "AIzaSyAKITV7P-n2hhDdtyhyHR8l6TLu7SMqkq4",
+            authDomain: "aviator-engine.firebaseapp.com",
+            projectId: "aviator-engine",
+            storageBucket: "aviator-engine.firebasestorage.app",
+            messagingSenderId: "46567723254",
+            appId: "1:46567723254:web:c3108b6fe059bdd93a9cd7"
+        };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
 
-    // Escuchar cambios
-    onSnapshot(query(collection(db, "history"), orderBy("timestamp", "desc"), limit(6)), (snap) => {
-        const history = snap.docs.map(d => d.data().value).reverse();
-        updateDisplay(history);
-    });
+        // Generar ID de sesión único para el usuario actual
+        const myID = "OP_" + Math.floor(Math.random() * 9999);
+        document.getElementById('sessionID').innerText = myID;
 
-    function updateDisplay(history) {
-        const box = document.getElementById('history-box');
-        box.innerHTML = history.map(v => `<span class="tag" style="background:${v < 2 ? '#3d1010' : '#103d25'}; color:${v < 2 ? '#ff4444' : '#00ff88'}">${v}x</span>`).join('');
+        // Función para enviar datos
+        window.sendData = async () => {
+            const input = document.getElementById('multiplier');
+            const val = parseFloat(input.value);
+            
+            if (!val || val <= 0) return;
 
-        if(history.length < 3) return;
+            try {
+                await addDoc(collection(db, "history"), {
+                    value: val,
+                    session: myID,
+                    timestamp: serverTimestamp()
+                });
+                input.value = "";
+                input.focus();
+            } catch (e) { console.error("Error al enviar:", e); }
+        };
 
-        let blueCount = history.filter(v => v < 1.8).length;
-        let target = 1.30;
-        let conf = 40;
+        // Función para borrar solo el último de esta sesión
+        window.deleteLast = async () => {
+            const q = query(collection(db, "history"), where("session", "==", myID), orderBy("timestamp", "desc"), limit(1));
+            const snap = await getDocs(q);
+            if (!snap.empty) {
+                await deleteDoc(doc(db, "history", snap.docs[0].id));
+            }
+        };
 
-        if (blueCount >= 3) {
-            target = 1.22;
-            conf = 94;
-            document.getElementById('monitor').classList.add('alert-active');
-            // Vibrar celular si es posible
-            if(window.navigator.vibrate) window.navigator.vibrate(200);
-        } else {
-            document.getElementById('monitor').classList.remove('alert-active');
-        }
+        // Escuchar cambios para mostrar el historial visual de esta sesión
+        const qHistory = query(collection(db, "history"), where("session", "==", myID), orderBy("timestamp", "desc"), limit(8));
+        onSnapshot(qHistory, (snap) => {
+            const container = document.getElementById('badgeHistory');
+            container.innerHTML = "";
+            snap.forEach(doc => {
+                const val = doc.data().value;
+                const b = document.createElement('div');
+                b.className = `badge ${val < 2 ? 'red' : 'gold'}`;
+                b.innerText = val.toFixed(2) + "x";
+                container.appendChild(b);
+            });
+        });
 
-        document.getElementById('target-text').innerText = target.toFixed(2) + "x";
-        document.getElementById('conf-text').innerText = conf + "%";
-        document.getElementById('conf-bar').style.width = conf + "%";
-    }
-
-    async function save() {
-        const input = document.getElementById('val-in');
-        const val = parseFloat(input.value);
-        if (val > 0) {
-            await addDoc(collection(db, "history"), { value: val, timestamp: serverTimestamp() });
-            input.value = "";
-            input.focus();
-        }
-    }
-
-    document.getElementById('btn-send').onclick = save;
-    document.getElementById('val-in').addEventListener('keypress', (e) => { if(e.key === 'Enter') save(); });
-    document.getElementById('btn-reset').onclick = async () => {
-        if(confirm("¿Limpiar historial de Firebase?")) {
-            const s = await getDocs(collection(db, "history"));
-            s.forEach(async d => await deleteDoc(d.ref));
-        }
-    };
-</script>
+        // Detectar tecla Enter
+        document.getElementById('multiplier').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendData();
+        });
+    </script>
 </body>
 </html>
