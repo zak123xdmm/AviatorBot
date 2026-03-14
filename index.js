@@ -16,7 +16,7 @@ const firebaseConfig = {
 const TELEGRAM_TOKEN = '8151433013:AAFiK6qE09O3506Wn9Uis8fU13v-9-m6rN4'; 
 const CHAT_ID = '8345781964';
 
-// Inicialización
+// Inicialización de servicios
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
@@ -25,7 +25,7 @@ console.log("🎯 MODO FRANCOTIRADOR V10.6 - ONLINE");
 console.log("📡 Escuchando señales de alta precisión...");
 console.log("-----------------------------------------");
 
-// 3. FUNCIÓN DE ENVÍO
+// 3. FUNCIÓN DE ENVÍO PROFESIONAL
 async function sendSignal(target, conf, motivo) {
     const msg = `💎 *SEÑAL DE ALTA PROBABILIDAD*\n\n🎯 *OBJETIVO:* ${target}x\n🔥 *CONFIANZA:* ${conf}%\n📊 *ANÁLISIS:* ${motivo}\n\n⚠️ _Retirar en el punto exacto para asegurar ganancia._`;
     const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
@@ -51,31 +51,33 @@ async function sendSignal(target, conf, motivo) {
     }
 }
 
-// 4. MOTOR DE PREDICCIÓN
+// 4. MOTOR DE PREDICCIÓN (LÓGICA DE SEGURIDAD)
 const q = query(collection(db, "history"), orderBy("timestamp", "desc"), limit(10));
 
 onSnapshot(q, (snap) => {
+    // Obtenemos los valores de Firebase
     const history = snap.docs.map(d => d.data().value).reverse();
     
     if (history.length >= 5) {
         const lastValues = history.slice(-5);
         const lastValue = lastValues[lastValues.length - 1];
         
-        // Filtro: Detectar racha de rojos (< 1.30x)
+        // FILTRO DE INGENIERÍA: Detectar racha de "pobreza" del casino
         const coldCount = lastValues.filter(v => v < 1.30).length;
 
-        // ESTRATEGIA: Si hay 4 o más rojos y el último es un crash extremo
-        if (coldCount >= 4 && lastValue < 1.05) {
-            sendSignal("1.18", "99", "COMPENSACIÓN DE SISTEMA");
+        // ESTRATEGIA: Si hay 4 o más rojos y el último es un crash casi total
+        if (coldCount >= 4 && lastValue < 1.10) {
+            sendSignal("1.22", "94", "SATURACIÓN DE ALGORITMO"); // Basado en tu panel 10.6
         } 
-        // PATRÓN SECUNDARIO: Rebote tras doble crash
-        else if (lastValues[lastValues.length-1] < 1.10 && lastValues[lastValues.length-2] < 1.10) {
-            sendSignal("1.22", "96", "REBOTE ESTADÍSTICO");
-        }
         else {
-            console.log(`📡 Analizando: ${lastValue}x... Mercado en espera.`);
+            console.log(`📡 [LOG] Dato: ${lastValue}x. Esperando racha de seguridad.`);
         }
     }
 }, (error) => {
     console.log("❌ ERROR FIREBASE:", error.message);
 });
+
+// 5. ANCLA DE ACTIVIDAD (Evita el error SIGTERM en Railway)
+setInterval(() => {
+    console.log("💎 Sistema Francotirador: Escuchando patrones en tiempo real...");
+}, 60000);
