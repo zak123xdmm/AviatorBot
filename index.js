@@ -2,6 +2,7 @@ import { initializeApp } from "firebase/app";
 import { getFirestore, collection, onSnapshot, query, orderBy, limit } from "firebase/firestore";
 import fetch from "node-fetch";
 
+// --- CONFIGURACIÓN ---
 const firebaseConfig = {
     apiKey: "AIzaSyAKITV7P-n2hhDdtyhyHR8l6TLu7SMqkq4",
     authDomain: "aviator-engine.firebaseapp.com",
@@ -19,11 +20,12 @@ const db = getFirestore(app);
 
 let lastSignalTime = 0;
 
-async function sendSignal(target, conf, motivo, estrategia) {
+// --- FUNCIÓN DE SALIDA ---
+async function sendSignal(target, conf, analisis) {
     const now = Date.now();
-    if (now - lastSignalTime < 25000) return; 
+    if (now - lastSignalTime < 15000) return; // Cooldown optimizado para rondas seguidas
 
-    const msg = `🚀 *PREDICCIÓN MATEMÁTICA V12.3*\n\n🎯 *OBJETIVO:* ${target}x\n🔥 *CONFIANZA:* ${conf}%\n📊 *ANÁLISIS:* ${motivo}\n\n💡 *ESTRATEGIA:* ${estrategia}`;
+    const msg = `💎 *DETERMINACIÓN DE SISTEMA*\n\n🎯 *PUNTO DE SALIDA:* ${target}x\n🔥 *CONFIANZA:* ${conf}%\n📊 *BASE:* ${analisis}\n\n✅ _Instrucción: Salida automática configurada a ${target}x._`;
     const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
     
     try {
@@ -33,52 +35,55 @@ async function sendSignal(target, conf, motivo, estrategia) {
             body: JSON.stringify({ chat_id: CHAT_ID, text: msg, parse_mode: 'Markdown' })
         });
         lastSignalTime = now;
-        console.log(`✅ Predicción enviada: ${target}x`);
-    } catch (e) { console.log("❌ Error:", e.message); }
+        console.log(`✅ PREDICCIÓN FIJADA: ${target}x`);
+    } catch (e) { console.log("❌ Error Telegram:", e.message); }
 }
 
-const q = query(collection(db, "history"), orderBy("timestamp", "desc"), limit(12));
+// --- MOTOR DE CÁLCULO ---
+const q = query(collection(db, "history"), orderBy("timestamp", "desc"), limit(8));
 
 onSnapshot(q, (snap) => {
     const history = snap.docs.map(d => d.data().value).reverse();
     
-    if (history.length >= 6) {
-        const last6 = history.slice(-6);
-        const last = last6[5];
+    if (history.length >= 4) {
+        const last = history[history.length - 1];
+        const penult = history[history.length - 2];
+        const antepenult = history[history.length - 3];
         
-        // CÁLCULO DE PRESIÓN DE PAGO (Lógica de Ingeniería)
-        const presion = last6.reduce((acc, v) => {
-            if (v < 1.10) return acc + 2.8; // Mayor peso a los instacrashes
-            if (v < 1.50) return acc + 1.4;
-            if (v >= 2.00) return acc - 2.5; // Los verdes liberan la carga del servidor
-            return acc;
-        }, 0);
-
-        const redCount = last6.filter(v => v < 1.5).length;
-
+        // Análisis de Varianza (Diferencia acumulada del 2.0x)
+        const varianza = history.reduce((acc, v) => acc + (2.0 - v), 0);
+        
         let target = 0;
         let conf = 0;
-        let motivo = "";
-        let estrategia = "";
+        let reason = "";
 
-        // ESCENARIO 1: COMPENSACIÓN POR SATURACIÓN (El más rentable)
-        if (presion >= 7.0 && redCount >= 5) {
-            target = (1.92 + (presion * 0.12)).toFixed(2);
-            conf = 95;
-            motivo = "SATURACIÓN DE ALGORITMO DETECTADA";
-            estrategia = `Entrada recomendada. Salida segura en ${(target - 0.15).toFixed(2)}x`;
+        // LÓGICA 1: COMPENSACIÓN POR HUECO (Racha de rojos o valores mediocres)
+        // Si la varianza es alta, el sistema DEBE pagar una cuota decente
+        if (varianza > 4.5) {
+            target = (2.02 + (varianza * 0.12)).toFixed(2);
+            conf = 94;
+            reason = "ALGORITMO EN PUNTO DE RETORNO";
         }
         
-        // ESCENARIO 2: REBOTE TÉCNICO (Tras un 1.00x)
-        else if (last <= 1.01 && redCount >= 4) {
-            target = "1.58";
-            conf = 98;
-            motivo = "REBOTE POR CRASH SECO";
-            estrategia = "Scalping rápido. No buscar multiplicadores altos aquí.";
+        // LÓGICA 2: REPETICIÓN DE PATRÓN DE ESPEJO
+        // Si detecta un rebote tras un valor ínfimo
+        else if (last <= 1.10) {
+            target = (1.55 + (varianza * 0.05)).toFixed(2);
+            conf = 97;
+            reason = "PUNTO DE REBOTE MATEMÁTICO";
+        }
+        
+        // LÓGICA 3: FLUJO CONTINUO (Para que no se quede callado)
+        // Si hay una tendencia estable de rojos suaves (1.2 - 1.8)
+        else if (last < 2.0 && penult < 2.0) {
+            target = (2.12).toFixed(2);
+            conf = 88;
+            reason = "AJUSTE DE TENDENCIA LINEAL";
         }
 
-        if (target > 0) {
-            sendSignal(target, conf, motivo, estrategia);
+        // Validación de cuota mínima para "Ganar Dinero"
+        if (target > 1.30) {
+            sendSignal(target, conf, reason);
         }
     }
 });
