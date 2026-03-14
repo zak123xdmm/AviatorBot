@@ -12,8 +12,8 @@ const firebaseConfig = {
     appId: "1:46567723254:web:c3108b6fe059bdd93a9cd7"
 };
 
-// 2. CONFIGURACIÓN DE TELEGRAM
-const TELEGRAM_TOKEN = '8151433013:AAFiK6qE09O3506Wn9Uis8fU13v-9-m6rN4'; 
+// 2. CONFIGURACIÓN DE TELEGRAM (ACTUALIZADA)
+const TELEGRAM_TOKEN = '8622153154:AAGHHDTA6Pv_umK5tCU9N8HU5enx3z3QEiA'; 
 const CHAT_ID = '8345781964';
 
 // Inicialización de servicios
@@ -22,7 +22,7 @@ const db = getFirestore(app);
 
 console.log("-----------------------------------------");
 console.log("🎯 MODO FRANCOTIRADOR V10.6 - ONLINE");
-console.log("📡 Escuchando señales de alta precisión...");
+console.log("📡 Usando nuevo Token: 8622153...EiA");
 console.log("-----------------------------------------");
 
 // 3. FUNCIÓN DE ENVÍO PROFESIONAL
@@ -55,29 +55,28 @@ async function sendSignal(target, conf, motivo) {
 const q = query(collection(db, "history"), orderBy("timestamp", "desc"), limit(10));
 
 onSnapshot(q, (snap) => {
-    // Obtenemos los valores de Firebase
     const history = snap.docs.map(d => d.data().value).reverse();
     
     if (history.length >= 5) {
         const lastValues = history.slice(-5);
         const lastValue = lastValues[lastValues.length - 1];
         
-        // FILTRO DE INGENIERÍA: Detectar racha de "pobreza" del casino
+        // FILTRO: Detectar racha de rojos (< 1.30x)
         const coldCount = lastValues.filter(v => v < 1.30).length;
 
-        // ESTRATEGIA: Si hay 4 o más rojos y el último es un crash casi total
+        // ESTRATEGIA: Si hay 4 o más rojos y el último es un crash extremo
         if (coldCount >= 4 && lastValue < 1.10) {
-            sendSignal("1.22", "94", "SATURACIÓN DE ALGORITMO"); // Basado en tu panel 10.6
+            sendSignal("1.22", "94", "SATURACIÓN DE ALGORITMO");
         } 
         else {
-            console.log(`📡 [LOG] Dato: ${lastValue}x. Esperando racha de seguridad.`);
+            console.log(`📡 [LOG] Escuchando: ${lastValue}x. Mercado en espera de patrón.`);
         }
     }
 }, (error) => {
     console.log("❌ ERROR FIREBASE:", error.message);
 });
 
-// 5. ANCLA DE ACTIVIDAD (Evita el error SIGTERM en Railway)
+// 5. ANCLA DE ACTIVIDAD (Mantiene el servidor despierto en Railway)
 setInterval(() => {
-    console.log("💎 Sistema Francotirador: Escuchando patrones en tiempo real...");
+    console.log("💎 Sistema Francotirador: Verificando integridad del servidor...");
 }, 60000);
