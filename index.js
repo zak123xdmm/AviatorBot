@@ -2,7 +2,7 @@ import { initializeApp } from "firebase/app";
 import { getFirestore, collection, onSnapshot, query, orderBy, limit } from "firebase/firestore";
 import fetch from "node-fetch";
 
-// 1. CONFIGURACIÓN DE TUS CREDENCIALES
+// 1. CONFIGURACIÓN DE FIREBASE (Aviator-Engine)
 const firebaseConfig = {
     apiKey: "AIzaSyAKITV7P-n2hhDdtyhyHR8l6TLu7SMqkq4",
     authDomain: "aviator-engine.firebaseapp.com",
@@ -12,81 +12,87 @@ const firebaseConfig = {
     appId: "1:46567723254:web:c3108b6fe059bdd93a9cd7"
 };
 
-// --- REEMPLAZA ESTO CON TU TOKEN ---
-const TELEGRAM_TOKEN = 'TU_TOKEN_AQUÍ'; 
+// 2. CONFIGURACIÓN DE TELEGRAM (Integrada)
+const TELEGRAM_TOKEN = '8151433013:AAFiK6qE09O3506Wn9Uis8fU13v-9-m6rN4'; 
 const CHAT_ID = '8345781964';
 
-// 2. INICIALIZACIÓN
+// Inicialización de servicios
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-console.log("🚀 Safe-Guard Engine iniciado en Railway...");
-console.log("📡 Escuchando cambios en Firebase para el ID: " + CHAT_ID);
+console.log("-----------------------------------------");
+console.log("🚀 SAFE-GUARD ENGINE V10.6 - MODO SEGURO");
+console.log("📡 Estado: Escuchando datos en tiempo real...");
+console.log("📡 Monitorizando Chat ID: " + CHAT_ID);
+console.log("-----------------------------------------");
 
-// 3. FUNCIÓN DE ENVÍO A TELEGRAM
+// 3. FUNCIÓN DE ENVÍO DE ALERTAS
 async function notifyTelegram(target, conf, status) {
-    const icon = status.includes("PELIGRO") ? "⚠️" : "✅";
     const msg = `
-${icon} *SEÑAL SAFE-GUARD*
---------------------------
-🎯 *Objetivo:* ${target}x
-💎 *Confianza:* ${conf}%
-📊 *Estado:* ${status}
---------------------------
-🔔 _Retira antes del objetivo._
+🚨 *SEÑAL DE ALTA PRECISIÓN* 🚨
+------------------------------------
+🎯 *ENTRADA:* ${target}x
+💎 *CONFIANZA:* ${conf}%
+📊 *MOTIVO:* ${status}
+------------------------------------
+⚠️ _Retiro Automático Sugerido_
+💰 _Gestione su capital con disciplina_
     `;
 
     const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage?chat_id=${CHAT_ID}&text=${encodeURIComponent(msg)}&parse_mode=Markdown`;
     
     try {
-        const response = await fetch(url);
-        if (response.ok) {
-            console.log(`[${new Date().toLocaleTimeString()}] Mensaje enviado con éxito.`);
+        const res = await fetch(url);
+        if (res.ok) {
+            console.log(`✅ [${new Date().toLocaleTimeString()}] Alerta enviada con éxito.`);
         } else {
-            console.error("Error en la respuesta de Telegram:", response.statusText);
+            console.log("❌ Error en la API de Telegram. Verifica si el bot está iniciado.");
         }
     } catch (e) {
-        console.error("Error de conexión con la API de Telegram:", e);
+        console.error("❌ Error de conexión con Telegram:", e);
     }
 }
 
-// 4. LÓGICA DE ANÁLISIS EN TIEMPO REAL
+// 4. MOTOR DE ANÁLISIS DE PROBABILIDAD
 const q = query(collection(db, "history"), orderBy("timestamp", "desc"), limit(10));
 
 onSnapshot(q, (snap) => {
-    // Obtenemos los últimos valores y los invertimos para que el más nuevo sea el último del array
+    // Obtenemos los últimos valores registrados desde tu HTML
     const history = snap.docs.map(d => d.data().value).reverse();
     
+    // Necesitamos historial para confirmar el patrón seguro
     if (history.length >= 5) {
-        const last = history[history.length - 1];
+        const last5 = history.slice(-5);
         
-        // Contamos cuántos "azules" (menores a 1.8) han salido recientemente
-        let blueCount = 0;
-        history.slice(-6).forEach(v => { if (v < 1.8) blueCount++; });
+        // FILTRO: Detectar racha de rojos (menores a 1.50x)
+        const coldStreak = last5.filter(v => v < 1.50).length;
+        const lastValue = last5[last5.length - 1];
 
-        let target = 1.30;
-        let conf = 75;
-        let status = "ESTABLE";
+        let target = 0;
+        let conf = 0;
+        let status = "";
 
-        // Caso de saturación (El casino está quitando dinero)
-        if (blueCount >= 4) {
-            target = 1.15;
-            conf = 95;
-            status = "PELIGRO DE INSTACRASH";
+        // ESTRATEGIA: SATURACIÓN DE ROJOS (Punto de rebote estadístico)
+        if (coldStreak >= 4 && lastValue < 1.25) {
+            target = 1.20; // Entrada ultra conservadora
+            conf = 98;
+            status = "PATRÓN DE REBOTE CONFIRMADO";
         } 
-        // Caso de rebote tras un número muy bajo
-        else if (last < 1.2) {
-            target = 1.25;
-            conf = 90;
-            status = "REBOTE SEGURO";
+        
+        // ESTRATEGIA: RECUPERACIÓN TRAS DOBLE CRASH (< 1.10x)
+        else if (last5[last5.length-1] < 1.10 && last5[last5.length-2] < 1.10) {
+            target = 1.15;
+            conf = 96;
+            status = "REBOTE TRAS DOBLE INSTACRASH";
         }
 
-        // 5. DISPARADOR DE NOTIFICACIÓN
-        // Solo mandamos mensaje si la confianza es alta para no saturar Railway ni tu celular
-        if (conf >= 90) {
+        // DISPARADOR: Solo se envía si la confianza es superior al 95%
+        if (conf >= 95) {
             notifyTelegram(target.toFixed(2), conf, status);
+        } else {
+            console.log(`ℹ️ [LOG] Dato: ${lastValue}x. Esperando racha de seguridad.`);
         }
     }
-}, (error) => {
-    console.error("Error en la escucha de Firebase:", error);
+}, (err) => {
+    console.error("❌ Error crítico de conexión a Base de Datos:", err.message);
 });
