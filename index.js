@@ -12,29 +12,22 @@ const firebaseConfig = {
     appId: "1:46567723254:web:c3108b6fe059bdd93a9cd7"
 };
 
-// 2. CONFIGURACIÓN DE TELEGRAM (Tu ID confirmado)
+// 2. CONFIGURACIÓN DE TELEGRAM (Confirmada)
 const TELEGRAM_TOKEN = '8151433013:AAFiK6qE09O3506Wn9Uis8fU13v-9-m6rN4'; 
 const CHAT_ID = '8345781964';
 
-// Inicialización de Servicios
+// Inicialización de servicios
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 console.log("-----------------------------------------");
-console.log("🎯 MODO FRANCOTIRADOR V10.6 - INICIADO");
-console.log("📡 Estado: Escuchando datos de ingeniería...");
+console.log("🎯 MODO FRANCOTIRADOR V10.6 - ONLINE");
+console.log("📡 Escuchando señales de alta precisión...");
 console.log("-----------------------------------------");
 
-// Variable para evitar señales duplicadas seguidas
-let lastSignalTime = 0;
-
-// 3. FUNCIÓN DE ENVÍO OPTIMIZADA
+// 3. FUNCIÓN DE ENVÍO PROFESIONAL
 async function sendSignal(target, conf, motivo) {
-    const now = Date.now();
-    // Evita mandar dos señales en menos de 10 segundos
-    if (now - lastSignalTime < 10000) return; 
-
-    const msg = `💎 *SEÑAL DE ALTA PROBABILIDAD*\n\n🎯 *ENTRADA:* ${target}x\n🔥 *CONFIANZA:* ${conf}%\n📊 *MOTIVO:* ${motivo}\n\n⚠️ _Retirar al llegar al objetivo._`;
+    const msg = `💎 *SEÑAL DE ALTA PROBABILIDAD*\n\n🎯 *OBJETIVO:* ${target}x\n🔥 *CONFIANZA:* ${conf}%\n📊 *ANÁLISIS:* ${motivo}\n\n⚠️ _Retirar en el punto exacto para asegurar ganancia._`;
     const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
     
     try {
@@ -49,8 +42,7 @@ async function sendSignal(target, conf, motivo) {
         });
         const data = await response.json();
         if (data.ok) {
-            lastSignalTime = now;
-            console.log(`✅ [${new Date().toLocaleTimeString()}] SEÑAL ENVIADA CON ÉXITO`);
+            console.log(`✅ [${new Date().toLocaleTimeString()}] SEÑAL ENVIADA AL CELULAR`);
         } else {
             console.log("❌ ERROR TELEGRAM:", data.description);
         }
@@ -59,31 +51,31 @@ async function sendSignal(target, conf, motivo) {
     }
 }
 
-// 4. MOTOR DE ANÁLISIS (LÓGICA DE INGENIERÍA)
+// 4. MOTOR DE PREDICCIÓN (LÓGICA DE SEGURIDAD)
 const q = query(collection(db, "history"), orderBy("timestamp", "desc"), limit(10));
 
 onSnapshot(q, (snap) => {
-    // Obtenemos los valores y los ordenamos cronológicamente
+    // Obtenemos los valores de Firebase
     const history = snap.docs.map(d => d.data().value).reverse();
     
-    if (history.length >= 6) {
-        const last6 = history.slice(-6);
-        const lastValue = last6[last6.length - 1];
+    if (history.length >= 5) {
+        const lastValues = history.slice(-5);
+        const lastValue = lastValues[lastValues.length - 1];
         
-        // Conteo de multiplicadores bajos (Rojos < 1.30x)
-        const coldCount = last6.filter(v => v < 1.30).length;
+        // FILTRO DE INGENIERÍA: Detectar racha de "pobreza" del casino
+        // Contamos cuántos multiplicadores son menores a 1.30x
+        const coldCount = lastValues.filter(v => v < 1.30).length;
 
-        // ESTRATEGIA 1: SATURACIÓN EXTREMA (La más segura)
-        // 5 rojos seguidos y el último fue casi pérdida total
-        if (coldCount >= 5 && lastValue < 1.05) {
-            sendSignal("1.15", "99", "COMPENSACIÓN DE SISTEMA");
+        // ESTRATEGIA: Si hay 4 o más rojos y el último es un crash casi total
+        if (coldCount >= 4 && lastValue < 1.05) {
+            sendSignal("1.18", "99", "COMPENSACIÓN DE SISTEMA");
         } 
-        // ESTRATEGIA 2: DOBLE CRASH RÁPIDO
-        else if (last6[last6.length-1] < 1.10 && last6[last6.length-2] < 1.10) {
-            sendSignal("1.20", "96", "REBOTE ESTADÍSTICO");
+        // PATRÓN SECUNDARIO: Rebote tras doble crash extremo
+        else if (lastValues[lastValues.length-1] < 1.10 && lastValues[lastValues.length-2] < 1.10) {
+            sendSignal("1.22", "96", "REBOTE ESTADÍSTICO");
         }
         else {
-            console.log(`📡 Dato recibido: ${lastValue}x. Analizando patrones...`);
+            console.log(`📡 Analizando: ${lastValue}x... Mercado en espera.`);
         }
     }
 }, (error) => {
