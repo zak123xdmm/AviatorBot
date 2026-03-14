@@ -1,7 +1,7 @@
 {
   "name": "safeguard-bot",
   "version": "1.0.6",
-  "description": "Motor de Alta Precisión Aviator",
+  "description": "Motor de Alta Precision",
   "main": "index.js",
   "type": "module",
   "scripts": {
