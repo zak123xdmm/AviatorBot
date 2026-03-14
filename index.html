@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SAFE-GUARD V16.1 | PREMIUM FIX</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg: #0b0e11; --primary: #fcd535; --danger: #f6465d; --success: #0ecb81; --card: #1e2329; --text: #eaeaea; --border: #2b3139; }
+        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .panel { width: 95%; max-width: 420px; background: var(--card); padding: 25px; border-radius: 28px; border: 1px solid var(--border); box-shadow: 0 25px 60px rgba(0,0,0,0.8); text-align: center; }
+        h2 { color: var(--primary); font-weight: 900; margin: 0; letter-spacing: -1.5px; font-size: 26px; }
+        .session-info { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #848e9c; background: rgba(255,255,255,0.05); padding: 4px 10px; border-radius: 20px; display: inline-block; margin: 10px 0; border: 1px solid var(--border); }
+        
+        .seed-input { width: 100%; background: #0b0e11; border: 1px solid var(--border); border-radius: 12px; color: #fff; padding: 12px; font-size: 11px; font-family: 'JetBrains Mono', monospace; margin-bottom: 15px; box-sizing: border-box; }
+        .seed-active { border: 1px solid var(--success); color: var(--success); }
+
+        .main-input { width: 100%; background: #0b0e11; border: 2px solid var(--border); border-radius: 18px; color: white; padding: 20px; font-size: 48px; font-family: 'JetBrains Mono', monospace; font-weight: 700; text-align: center; box-sizing: border-box; margin-bottom: 15px; }
+        
+        .btn-send { width: 100%; background: var(--primary); color: #000; padding: 20px; border: none; border-radius: 18px; font-weight: 900; font-size: 18px; cursor: pointer; margin-bottom: 10px; transition: 0.2s; }
+        .btn-send:active { transform: scale(0.98); opacity: 0.8; }
+        
+        .btn-undo { width: 100%; background: rgba(246, 70, 93, 0.1); color: var(--danger); border: 1px solid rgba(246, 70, 93, 0.2); padding: 12px; border-radius: 14px; cursor: pointer; font-weight: 700; font-size: 13px; margin-bottom: 20px; }
+
+        .history-flow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; min-height: 100px; margin-top: 10px; border-top: 1px solid var(--border); padding-top: 15px; }
+        .badge { background: #2b3139; padding: 12px 2px; border-radius: 12px; font-weight: 700; font-size: 14px; font-family: 'JetBrains Mono', monospace; border-bottom: 3px solid rgba(255,255,255,0.1); animation: pop 0.3s ease; }
+        @keyframes pop { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .lose { color: var(--danger); border-bottom-color: var(--danger); }
+        .win { color: var(--success); border-bottom-color: var(--success); }
+    </style>
+</head>
+<body>
+    <div class="panel">
+        <h2>SAFE-GUARD V16.1</h2>
+        <div class="session-info">ID ACTIVO: UWSWLQ</div>
+        <input type="text" id="seedInput" class="seed-input" placeholder="PEGAR SEMILLA SHA256">
+        <input type="number" id="val" class="main-input" placeholder="0.00" step="0.01">
+        
+        <button id="sendBtn" class="btn-send">REGISTRAR TIRO</button>
+        <button id="undoBtn" class="btn-undo">BORRAR ÚLTIMO</button>
+
+        <div style="font-size: 10px; color: #848e9c; margin-top: 10px;">HISTORIAL DE SESIÓN</div>
+        <div id="logs" class="history-flow"></div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp, query, orderBy, limit, onSnapshot, where, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const config = {
+            apiKey: "AIzaSyAKITV7P-n2hhDdtyhyHR8l6TLu7SMqkq4",
+            authDomain: "aviator-engine.firebaseapp.com",
+            projectId: "aviator-engine",
+            storageBucket: "aviator-engine.firebasestorage.app",
+            messagingSenderId: "46567723254",
+            appId: "1:46567723254:web:c3108b6fe059bdd93a9cd7"
+        };
+
+        const app = initializeApp(config);
+        const db = getFirestore(app);
+        const myId = "UWSWLQ"; // ID Unificado con el bot de Telegram
+
+        const sendBtn = document.getElementById('sendBtn');
+        const valInput = document.getElementById('val');
+        const seedInput = document.getElementById('seedInput');
+
+        // FUNCIÓN DE ENVÍO CORREGIDA (Sin usar onclick en el HTML para evitar fallos)
+        sendBtn.addEventListener('click', async () => {
+            const v = parseFloat(valInput.value);
+            const s = seedInput.value.trim();
+
+            if (!v || isNaN(v)) return alert("Pon un número válido");
+            if (s.length < 10) return alert("Pega la semilla primero");
+
+            try {
+                sendBtn.disabled = true;
+                sendBtn.innerText = "ENVIANDO...";
+                
+                await addDoc(collection(db, "history"), { 
+                    value: v, 
+                    timestamp: serverTimestamp(),
+                    userId: myId,
+                    seedId: s
+                });
+
+                valInput.value = "";
+                valInput.focus();
+            } catch (error) {
+                console.error(error);
+                alert("Error de conexión con la base de datos");
+            } finally {
+                sendBtn.disabled = false;
+                sendBtn.innerText = "REGISTRAR TIRO";
+            }
+        });
+
+        // BORRADO ÚLTIMO
+        document.getElementById('undoBtn').addEventListener('click', async () => {
+            const q = query(collection(db, "history"), where("userId", "==", myId), orderBy("timestamp", "desc"), limit(1));
+            const snap = await getDocs(q);
+            if (!snap.empty) await deleteDoc(doc(db, "history", snap.docs[0].id));
+        });
+
+        // ESCUCHA EN TIEMPO REAL
+        const qLive = query(collection(db, "history"), where("userId", "==", myId), orderBy("timestamp", "desc"), limit(8));
+        onSnapshot(qLive, (snap) => {
+            const list = document.getElementById('logs');
+            list.innerHTML = "";
+            snap.forEach(d => {
+                const v = d.data().value;
+                const div = document.createElement('div');
+                div.className = `badge ${v < 2.0 ? 'lose' : 'win'}`;
+                div.innerText = v.toFixed(2) + "x";
+                list.appendChild(div);
+            });
+        });
+    </script>
+</body>
+</html>
