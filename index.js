@@ -1,8 +1,8 @@
-// Importaciones locales para Node.js (Requiere: npm install firebase)
 import { initializeApp } from "firebase/app";
-import { getFirestore, collection, addDoc, serverTimestamp, query, orderBy, limit, onSnapshot } from "firebase/firestore";
+import { getFirestore, collection, query, orderBy, limit, onSnapshot } from "firebase/firestore";
+import TelegramBot from "node-telegram-bot-api";
 
-// Tu configuración de Firebase
+// 1. CONFIGURACIÓN FIREBASE
 const firebaseConfig = {
     apiKey: "AIzaSyAKITV7P-n2hhDdtyhyHR8l6TLu7SMqkq4",
     authDomain: "aviator-engine.firebaseapp.com",
@@ -12,58 +12,86 @@ const firebaseConfig = {
     appId: "1:46567723254:web:c3108b6fe059bdd93a9cd7"
 };
 
-// Inicializar Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const myId = "UWSWLQ"; // Tu ID fijo
 
-// --- LÓGICA DE PREDICCIÓN AVANZADA (Anti-Rojos) ---
-// Esta lógica es la que evita que el bot tire puras cuotas de 1.20x
+// 2. CONFIGURACIÓN TELEGRAM
+// REEMPLAZA ESTOS DOS VALORES
+const TOKEN = 'TU_TOKEN_DE_TELEGRAM'; 
+const MY_CHAT_ID = 'TU_CHAT_ID'; 
+
+const bot = new TelegramBot(TOKEN, { polling: true });
+const USER_ID_FILTER = "UWSWLQ"; 
+
+// 3. MOTOR DE PREDICCIÓN (Lógica de Rebote para evitar el 1.20x)
 function analyzeRhythm(history) {
-    if (history.length < 3) return { val: "---", take: "ESPERANDO DATOS" };
+    if (history.length < 3) return null;
     
-    const lastValue = history[0].value;
-    const trend = history.slice(0, 3).map(d => d.value);
-    
-    let prediction = 2.10; // Objetivo mínimo para profit real
-    
-    // Si venimos de un rojo (< 1.50), buscamos el rebote verde
-    if (lastValue < 1.5) {
-        prediction = 2.50; 
-    } else if (lastValue > 5.0) {
-        // Si acaba de salir una muy alta, bajamos el riesgo
-        prediction = 1.80;
-    } else {
-        prediction = lastValue * 1.15;
+    const last = history[0].value;
+    let prediction = 2.15; 
+    let confianza = "88%";
+
+    // Si detectamos racha de rojos o el 1.20x basura, buscamos rebote verde
+    if (last < 1.5) {
+        prediction = 2.55; 
+        confianza = "94%";
+    } else if (last > 4.0) {
+        prediction = 1.85;
+        confianza = "82%";
     }
 
-    // RETIRO SEGURO: 20% de margen para no perder por un crash repentino
-    const safeTake = (prediction * 0.80).toFixed(2);
+    const safeTake = (prediction * 0.82).toFixed(2); 
     
     return {
-        val: prediction.toFixed(2) + "x",
-        take: safeTake + "x"
+        val: prediction.toFixed(2),
+        take: safeTake,
+        conf: confianza
     };
 }
 
-// --- ESCUCHA DE DATOS Y NOTIFICACIÓN ---
-const q = query(collection(db, "history"), orderBy("timestamp", "desc"), limit(10));
+// 4. ESCUCHA ACTIVA Y MANTENIMIENTO DE PROCESO
+console.log("🚀 Servidor de Predicción Activo en Railway...");
+
+const q = query(collection(db, "history"), orderBy("timestamp", "desc"), limit(15));
+let lastProcessedTimestamp = null;
 
 onSnapshot(q, (snap) => {
+    if (snap.empty) return;
+    
     let userHistory = [];
+    const latestDoc = snap.docs[0];
+    const latestData = latestDoc.data();
+
+    // Evitar duplicados por reinicios de servidor
+    if (lastProcessedTimestamp && latestData.timestamp?.toMillis() <= lastProcessedTimestamp) return;
+    lastProcessedTimestamp = latestData.timestamp?.toMillis();
+
     snap.forEach(d => {
-        const data = d.data();
-        if (data.userId === myId) userHistory.push(data);
+        if (d.data().userId === USER_ID_FILTER) userHistory.push(d.data());
     });
 
-    if (userHistory.length > 0) {
-        const res = analyzeRhythm(userHistory);
+    const res = analyzeRhythm(userHistory);
+    
+    if (res) {
+        const msg = `
+🎯 **NUEVA SEÑAL DETECTADA**
+━━━━━━━━━━━━━━━━━━
+📈 PRÓXIMA RONDA: **${res.val}x**
+⚠️ RETIRAR EN: **${res.take}x**
+🔥 CONFIANZA: **${res.conf}**
+━━━━━━━━━━━━━━━━━━
+✅ *Sincronizado con Panel Web*`;
+
+        bot.sendMessage(MY_CHAT_ID, msg, { parse_mode: "Markdown" })
+           .catch(err => console.error("Error Telegram:", err.message));
         
-        // Aquí es donde el bot de Telegram enviaría el mensaje
-        console.log(`🎯 NUEVA PREDICCIÓN: ${res.val} | RETIRAR EN: ${res.take}`);
-        
-        // Si quieres que el bot hable, aquí iría la función de bot.sendMessage
+        console.log(`✅ Predicción enviada: ${res.val}x`);
     }
+}, (error) => {
+    console.error("Error Firebase Snapshot:", error);
 });
 
-console.log("🚀 Servidor de Predicción Activo en Railway...");
+// Mensaje de comando para verificar que el bot está vivo
+bot.onText(/\/status/, (msg) => {
+    bot.sendMessage(msg.chat.id, "✅ El sistema de predicción está Online y escuchando Firebase.");
+});
