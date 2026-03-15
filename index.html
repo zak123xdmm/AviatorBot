@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SAFE-GUARD ELITE V19.5</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&family=Inter:wght@400;900&display=swap" rel="stylesheet">
+    <style>
+        :root { 
+            --bg: #0b0e11; 
+            --primary: #fcd535; 
+            --danger: #f6465d; 
+            --success: #0ecb81; 
+            --card: #1e2329; 
+            --border: #2b3139; 
+        }
+
+        body { 
+            background: var(--bg); 
+            color: #fff; 
+            font-family: 'Inter', sans-serif; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+            margin: 0; 
+        }
+
+        .panel { 
+            width: 95%; 
+            max-width: 420px; 
+            background: var(--card); 
+            padding: 25px; 
+            border-radius: 30px; 
+            border: 1px solid var(--border); 
+            box-shadow: 0 30px 60px rgba(0,0,0,0.5); 
+            text-align: center; 
+        }
+
+        /* CUADRO DE PREDICCIÓN */
+        .prediction-box { 
+            background: rgba(0,0,0,0.4); 
+            border: 2px solid var(--primary); 
+            border-radius: 20px; 
+            padding: 20px; 
+            margin-bottom: 25px; 
+            box-shadow: 0 0 20px rgba(252, 213, 53, 0.1); 
+        }
+
+        .pred-label { 
+            font-size: 11px; 
+            color: var(--primary); 
+            text-transform: uppercase; 
+            letter-spacing: 2px; 
+            margin-bottom: 8px; 
+            font-weight: 900; 
+        }
+
+        .pred-value { 
+            font-size: 42px; 
+            font-family: 'JetBrains Mono', monospace; 
+            font-weight: 900; 
+            color: #fff; 
+        }
+
+        .withdraw-alert { 
+            font-size: 13px; 
+            color: var(--success); 
+            margin-top: 12px; 
+            font-weight: 900; 
+            background: rgba(14, 203, 129, 0.15); 
+            padding: 10px; 
+            border-radius: 12px; 
+            border: 1px dashed var(--success); 
+        }
+
+        /* ENTRADA DE DATOS */
+        .val-input { 
+            width: 100%; 
+            background: #000; 
+            border: 2px solid var(--border); 
+            border-radius: 20px; 
+            color: #fff; 
+            padding: 20px; 
+            font-size: 45px; 
+            font-family: 'JetBrains Mono', monospace; 
+            font-weight: 700; 
+            text-align: center; 
+            box-sizing: border-box; 
+            margin-bottom: 15px; 
+            outline: none; 
+        }
+
+        .val-input:focus { border-color: var(--primary); }
+
+        .btn-send { 
+            width: 100%; 
+            background: var(--primary); 
+            color: #000; 
+            padding: 18px; 
+            border: none; 
+            border-radius: 20px; 
+            font-weight: 900; 
+            font-size: 18px; 
+            cursor: pointer; 
+            margin-bottom: 12px; 
+            text-transform: uppercase; 
+        }
+
+        .btn-send:active { transform: scale(0.97); }
+
+        /* HISTORIAL */
+        .history-grid { 
+            display: grid; 
+            grid-template-columns: repeat(4, 1fr); 
+            gap: 10px; 
+            margin-top: 25px; 
+            border-top: 1px solid var(--border); 
+            padding-top: 20px; 
+        }
+
+        .badge { 
+            background: #2b3139; 
+            padding: 12px 2px; 
+            border-radius: 12px; 
+            font-weight: 700; 
+            font-size: 13px; 
+            font-family: 'JetBrains Mono', monospace; 
+            border-bottom: 3px solid #5e6673; 
+        }
+
+        .win { color: var(--success); border-bottom-color: var(--success); }
+        .lose { color: var(--danger); border-bottom-color: var(--danger); }
+
+        .session-info { 
+            font-size: 10px; 
+            color: #5e6673; 
+            margin-top: 15px; 
+            font-family: 'JetBrains Mono', monospace; 
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="panel">
+        <div class="prediction-box">
+            <div class="pred-label">Próxima Señal</div>
+            <div id="nextVal" class="pred-value">---</div>
+            <div id="nextTake" class="withdraw-alert">ESPERANDO DATOS...</div>
+        </div>
+
+        <input type="number" id="valIn" class="val-input" placeholder="0.00" step="0.01" autofocus>
+        <button id="btnSend" class="btn-send">Calcular Ganancia</button>
+        
+        <div id="logs" class="history-grid"></div>
+
+        <div id="sessionID" class="session-info">Conectando a Firebase...</div>
+    </div>
+
+    <script type="module" src="index.js"></script>
+
+</body>
+</html>
